@@ -1,0 +1,16 @@
+Query:
+1. Il numero di dipendenti assunto negli ultimi 12 mesi (o quelli assunti da più/meno tempo)
+2. I dipendenti e i coniugi che lavorano allo stesso progetto
+3. I/il dipartimenti/o che hanno/ha fatto più ordini negli ultimi 12 mesi
+4. Le competenze più usate nei progetti
+
+Vincoli da risolvere con i trigger:
+1. Inserimento dei coniugi, non puoi sposarti con te stesso
+2. Uso delle proprie competenze e non quelle generali (usare la tabella ha_competenze)
+3. La data della laurea deve essere pria del dottorato
+4. Devono essere passati 18 anni tra data_di_nascita e data_assunzione
+
+Vincoli da fare solo in SQL:
+1. Contorllo budget max 200'000 	FATTO
+2. Email e telefono con unique    FATTO
+3. Durata di un progetto > 0 mesi   FATTO

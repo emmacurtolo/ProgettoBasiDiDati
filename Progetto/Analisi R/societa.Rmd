@@ -1,0 +1,139 @@
+---
+title: "Societa"
+author: "Flutra Bajraktari, Camilla Burlon, Emma Curtolo, Margherita Monte"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+```{r}
+library("RPostgreSQL")
+library("DBI")
+library("ggplot2")
+library(dplyr)
+library("scales")
+
+drv <- dbDriver('PostgreSQL')
+con <- dbConnect( drv,
+                  dbname='societa',
+                  host='localhost',
+                  port=5432,
+                  user='postgres',
+                  password='basididati')
+
+```
+
+
+
+##Per ogni dipartimento, vogliamo individuare il numero di dipendenti che ci lavorano
+```{r}
+dipendenti_dipartimento<-dbGetQuery(con, 
+                                    "SELECT dipartimento, count(*)
+                                    FROM dipendente
+                                    GROUP BY dipartimento;")
+dipendenti_dipartimento
+
+grafico_dipendenti_dipartimento<-
+  ggplot(dipendenti_dipartimento,aes(dipartimento,count,fill=dipartimento))+
+  geom_col(show.legend = FALSE)+
+  coord_flip()+
+  labs(x='Dipartimento',y='Numero dipendenti', title= 'NUMERO DIPENDENTI PER DIPARTIMENTO')+
+  theme_classic()+
+  scale_y_continuous(breaks= pretty_breaks())
+
+grafico_dipendenti_dipartimento
+
+```
+
+
+
+##Assunzioni per anno
+```{r}
+assunzioni<-dbGetQuery(con,
+                       "SELECT extract(year from data_assunzione) AS data, count(*) AS assunzioni
+                       FROM dipendente
+                       WHERE data_assunzione <= '2020-12-31'
+                       GROUP BY extract(year from data_assunzione);")
+
+assunzioni
+
+
+anni = tibble (x = seq(2015, 2020, by = 1))
+
+grafico_assunzioni = assunzioni %>%
+  ggplot(aes(data, assunzioni)) +
+  geom_line( size = 2, color = "#7BDDBD") +
+  scale_x_continuous(breaks =seq(2015, 2020, by = 1)) +
+  geom_vline(data = anni, aes(xintercept = x), color = "#E1E1E1")+
+  labs(
+  title = "ASSUNZIONI",
+  x = "Anni",
+  y = "Numero dipendenti"
+  ) +
+    geom_point(size = 4, color = "black")+
+  theme_classic()
+
+grafico_assunzioni
+```
+
+
+
+## Come varia il budget in base alla durata?
+```{r}
+budget<-dbGetQuery(con, 
+                  "SELECT budget, durata
+                  FROM progetto;")
+
+budget
+
+grafico_budget<-
+  ggplot(budget, aes(durata, budget)) +
+  geom_smooth( size = 1, fill = "#7BDDBD", color = "#7BDDBD")+
+  geom_jitter( size = 3, color = "black") +
+  labs(
+  title = "CORRELAZIONE TRA BUDGET E DURATA DEL PROGETTO",
+  x = "Durata (mesi)",
+  y = "Budget"
+  ) +
+  theme_classic()
+
+grafico_budget
+
+```
+
+##Numero di competenze usate per progetto
+```{r}
+competenze_progetto<-dbGetQuery(con, 
+               "select cast(codice_progetto as varchar), count(competenza) as ncompetenze
+              from lavora_a
+              group by codice_progetto;")
+
+competenze_progetto
+
+
+grafico_competenze_progetto<-
+  ggplot(competenze_progetto,aes(codice_progetto,ncompetenze,fill=ncompetenze))+
+  geom_col(show.legend = FALSE)+
+  scale_fill_gradient(low = "#BCEEDD", high = "#62B097") +
+  labs(x='Progetto',y='Competenze', title= 'COMPETENZE UTILIZZATE PER OGNI PROGETTO')+
+  theme(axis.line.x = element_line(color="black"),
+        axis.line.y = element_line(color="black"),
+        panel.background = element_blank(),
+        axis.text.x= element_text(angle = 90))+
+  scale_y_continuous(breaks= pretty_breaks())
+
+
+grafico_competenze_progetto
+
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
